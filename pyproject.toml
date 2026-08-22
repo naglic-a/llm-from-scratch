@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-from-scratch"
+version = "0.1.0"
+description = "A transformer language model built from scratch for learning."
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.0",
+    "bpe-tokenizer",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.9",
+]
+
+[tool.setuptools]
+py-modules = ["config", "generation"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv.sources]
+bpe-tokenizer = { git = "https://github.com/naglic-a/bpe-tokenize.git", tag = "v0.1.0" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

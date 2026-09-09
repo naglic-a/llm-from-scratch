@@ -39,6 +39,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--num-epochs", type=int, default=10)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--resume", action="store_true", help="Resume training from checkpoint if it exists")
     return parser.parse_args()
 
 
@@ -114,6 +115,15 @@ def main() -> None:
         weight_decay=training_config.weight_decay,
     )
 
+    evaluations = []
+    if arguments.resume and arguments.checkpoint.exists():
+        print(f"Resuming training from {arguments.checkpoint}...")
+        checkpoint_data = torch.load(arguments.checkpoint, map_location=device, weights_only=False)
+        model.load_state_dict(checkpoint_data["model_state_dict"])
+        optimizer.load_state_dict(checkpoint_data["optimizer_state_dict"])
+        if "evaluations" in checkpoint_data:
+            evaluations = checkpoint_data["evaluations"]
+
     def log_evaluation(metrics: EvaluationMetrics) -> None:
         print(
             f"epoch={metrics.epoch} step={metrics.step} "
@@ -122,18 +132,23 @@ def main() -> None:
         )
 
     print(f"training on {device} with vocabulary size {model_config.vocab_size}")
-    history = train_model(
-        model=model,
-        train_loader=train_loader,
-        validation_loader=validation_loader,
-        optimizer=optimizer,
-        device=device,
-        num_epochs=training_config.num_epochs,
-        evaluation_interval=training_config.evaluation_interval,
-        evaluation_batches=training_config.evaluation_batches,
-        max_gradient_norm=training_config.max_gradient_norm,
-        on_evaluation=log_evaluation,
-    )
+    
+    try:
+        history = train_model(
+            model=model,
+            train_loader=train_loader,
+            validation_loader=validation_loader,
+            optimizer=optimizer,
+            device=device,
+            num_epochs=training_config.num_epochs,
+            evaluation_interval=training_config.evaluation_interval,
+            evaluation_batches=training_config.evaluation_batches,
+            max_gradient_norm=training_config.max_gradient_norm,
+            on_evaluation=log_evaluation,
+        )
+        evaluations.extend([asdict(metrics) for metrics in history.evaluations])
+    except KeyboardInterrupt:
+        print("\n\nTraining interrupted by user (Ctrl+C)! Saving current progress...")
 
     arguments.checkpoint.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
@@ -143,7 +158,7 @@ def main() -> None:
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "tokenizer_path": str(arguments.tokenizer_path),
-            "evaluations": [asdict(metrics) for metrics in history.evaluations],
+            "evaluations": evaluations,
         },
         arguments.checkpoint,
     )

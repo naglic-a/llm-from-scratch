@@ -76,7 +76,7 @@ def main() -> None:
     )
     print("Loading tokenizer...")
     tokenizer = train_or_load_tokenizer(
-        texts=[train_text],
+        texts=train_text.splitlines(keepends=True),
         path=arguments.tokenizer_path,
         target_vocab_size=arguments.vocab_size,
     )

@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 [[package]]
 name = "bpe-tokenizer"
 version = "0.1.0"
-source = { git = "https://github.com/naglic-a/bpe-tokenize.git?tag=v0.1.0#b17069c92cce20ae4fe4062bb71baeb81187001a" }
+source = { git = "https://github.com/naglic-a/bpe-tokenize.git?tag=v0.2.1#ac11de40c89170cc83713451611f16a541f4976f" }
 
 [[package]]
 name = "colorama"
@@ -147,7 +147,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bpe-tokenizer", git = "https://github.com/naglic-a/bpe-tokenize.git?tag=v0.1.0" },
+    { name = "bpe-tokenizer", git = "https://github.com/naglic-a/bpe-tokenize.git?tag=v0.2.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9" },
     { name = "torch", specifier = ">=2.0" },

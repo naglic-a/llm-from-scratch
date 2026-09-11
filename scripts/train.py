@@ -74,6 +74,7 @@ def main() -> None:
         learning_rate=arguments.learning_rate,
         num_epochs=arguments.num_epochs,
     )
+    print("Loading tokenizer...")
     tokenizer = train_or_load_tokenizer(
         texts=[train_text],
         path=arguments.tokenizer_path,
@@ -88,6 +89,7 @@ def main() -> None:
         dropout=arguments.dropout,
     )
 
+    print("Encoding train dataset...")
     train_loader = createDataLoader(
         train_text,
         tokenizer,
@@ -97,6 +99,7 @@ def main() -> None:
         shuffle=True,
         drop_last=True,
     )
+    print("Encoding validation dataset...")
     validation_loader = createDataLoader(
         validation_text,
         tokenizer,

@@ -25,7 +25,7 @@ py-modules = ["config", "generation"]
 where = ["src"]
 
 [tool.uv.sources]
-bpe-tokenizer = { git = "https://github.com/naglic-a/bpe-tokenize.git", tag = "v0.1.0" }
+bpe-tokenizer = { git = "https://github.com/naglic-a/bpe-tokenize.git", tag = "v0.2.0" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

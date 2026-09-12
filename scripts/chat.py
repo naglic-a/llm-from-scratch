@@ -63,6 +63,10 @@ def main() -> None:
         if user_input.lower() in ["quit", "exit"]:
             print("Farewell!")
             break
+        elif user_input.lower() == "clear":
+            conversation_history = ""
+            print("\n*** Context Cleared! ***\n")
+            continue
             
         # Add the user's turn to the context using the special tokens!
         prompt = conversation_history + f"<|user|>{user_input}<|bot|>"

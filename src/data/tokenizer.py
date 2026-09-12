@@ -5,12 +5,12 @@ from bpe_tokenizer import Tokenizer as RustTokenizer
 
 
 def train_tokenizer(
-    texts: list[str],
+    text: str,
     target_vocab_size: int,
 ) -> RustTokenizer:
-    """Returns default tokenizer if texts is empty, or target_vocab_size below 257"""
+    """Returns default tokenizer if text is empty, or target_vocab_size below 257"""
     
-    tokenizer = RustTokenizer.train(texts, target_vocab_size)
+    tokenizer = RustTokenizer.train(text, target_vocab_size)
     return tokenizer
     
 def save_tokenizer(
@@ -36,25 +36,72 @@ def load_tokenizer(path: str | Path) -> RustTokenizer:
     return RustTokenizer.load(str(source))
 
 
+class LLMTokenizer:
+    """
+    A Python wrapper that manages special tokens
+    """
+    def __init__(self, base_tokenizer: RustTokenizer):
+        self.base = base_tokenizer
+        self.base_vocab_size = base_tokenizer.vocab_size()
+    
+        self.special_tokens = {
+            "<|endoftext|>": self.base_vocab_size,     # 8189
+            "<|user|>": self.base_vocab_size + 1,      # 8190
+            "<|bot|>": self.base_vocab_size + 2        # 8191
+        }
+        self.inv_special_tokens = {v: k for k, v in self.special_tokens.items()}
+        
+    def vocab_size(self):
+        return self.base_vocab_size + len(self.special_tokens)
+        
+    def encode(self, text: str) -> list[int]:
+        # Split out the <|endoftext|> token
+        parts = text.split("<|endoftext|>")
+        ids = []
+        for i, part in enumerate(parts):
+            if part: 
+                ids.extend(self.base.encode(part))
+            if i < len(parts) - 1: 
+                ids.append(self.special_tokens["<|endoftext|>"])
+        return ids
+
+    def decode(self, ids: list[int]) -> str:
+        result = []
+        current_chunk = []
+        
+        for idx in ids:
+            if idx in self.inv_special_tokens:
+                if current_chunk:
+                    result.append(self.base.decode(current_chunk))
+                    current_chunk = []
+                result.append(self.inv_special_tokens[idx])
+            else:
+                current_chunk.append(idx)
+                
+        if current_chunk:
+            result.append(self.base.decode(current_chunk))
+            
+        return "".join(result)
+
 def train_or_load_tokenizer(
-    texts: list[str],
+    text: str,
     path: str | Path,
     target_vocab_size: int,
-) -> RustTokenizer:
+) -> LLMTokenizer:
     source = Path(path)
 
     if source.exists() and source.is_dir():
         raise IsADirectoryError(f"Tokenizer path is a directory: {source}")
 
     if not source.exists():
-        tokenizer = train_tokenizer(texts, target_vocab_size)
+        tokenizer = train_tokenizer(text, target_vocab_size - 3)
         save_tokenizer(tokenizer, source)
-        return tokenizer
+        return LLMTokenizer(tokenizer)
 
     tokenizer = load_tokenizer(source)
 
-    if tokenizer.vocab_size() < target_vocab_size:
-        tokenizer = train_tokenizer(texts, target_vocab_size)
+    if tokenizer.vocab_size() < target_vocab_size - 3:
+        tokenizer = train_tokenizer(text, target_vocab_size - 3)
         save_tokenizer(tokenizer, source)
 
-    return tokenizer
+    return LLMTokenizer(tokenizer)

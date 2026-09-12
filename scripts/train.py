@@ -111,7 +111,8 @@ def main() -> None:
     )
 
     device = resolve_device(arguments.device)
-    model = GPTModel(**asdict(model_config))
+    model = GPTModel(**asdict(model_config)).to(device)
+    
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=training_config.learning_rate,

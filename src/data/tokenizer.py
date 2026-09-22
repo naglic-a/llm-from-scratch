@@ -1,4 +1,4 @@
-
+import re
 from pathlib import Path
 
 from bpe_tokenizer import Tokenizer as RustTokenizer
@@ -50,19 +50,26 @@ class LLMTokenizer:
             "<|bot|>": self.base_vocab_size + 2        # 8191
         }
         self.inv_special_tokens = {v: k for k, v in self.special_tokens.items()}
+        self.special_token_pattern = re.compile(
+            "(" + "|".join(re.escape(token) for token in self.special_tokens) + ")"
+        )
         
     def vocab_size(self):
         return self.base_vocab_size + len(self.special_tokens)
         
     def encode(self, text: str) -> list[int]:
-        # Split out the <|endoftext|> token
-        parts = text.split("<|endoftext|>")
-        ids = []
-        for i, part in enumerate(parts):
-            if part: 
+        ids: list[int] = []
+
+        for part in self.special_token_pattern.split(text):
+            if not part:
+                continue
+
+            special_token_id = self.special_tokens.get(part)
+            if special_token_id is not None:
+                ids.append(special_token_id)
+            else:
                 ids.extend(self.base.encode(part))
-            if i < len(parts) - 1: 
-                ids.append(self.special_tokens["<|endoftext|>"])
+
         return ids
 
     def decode(self, ids: list[int]) -> str:

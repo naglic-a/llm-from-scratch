@@ -19,10 +19,15 @@ tokenizer and final checkpoint.
 
 ## Usage Examples
 
+Install the project dependencies:
+```bash
+uv sync
+```
+
 **1. Pre-Training**
 Train a new model and tokenizer from a text corpus:
 ```bash
-python scripts/train.py \
+uv run scripts/train.py \
     --text corpus.txt \
     --checkpoint checkpoints/model.pt \
     --tokenizer-path artifacts/tokenizer.json \
@@ -40,7 +45,7 @@ python scripts/train.py \
 **2. Fine-Tuning & Resuming**
 Resume training from an existing checkpoint. Use a lower learning rate for fine-tuning. (Press `Ctrl+C` to safely stop and save progress).
 ```bash
-python scripts/train.py \
+uv run scripts/train.py \
     --text new_corpus.txt \
     --checkpoint checkpoints/model.pt \
     --tokenizer-path artifacts/tokenizer.json \
@@ -59,7 +64,7 @@ python scripts/train.py \
 **3. Text Generation**
 Generate text from a trained checkpoint using a prompt:
 ```bash
-python scripts/generate.py \
+uv run scripts/generate.py \
     --checkpoint checkpoints/model.pt \
     --prompt "The meaning of life is" \
     --max-new-tokens 150 \
